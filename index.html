@@ -1,0 +1,825 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Bot Client</title>
+    
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        tg: {
+                            blue: '#3390ec',
+                            dark: '#212121',
+                            darker: '#181818',
+                            darkmsg: '#2b5278',
+                            lightmsg: '#eeffde',
+                            hover: '#f4f4f5',
+                            darkhover: '#2c2c2c'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Стили для скроллбара, как в Telegram */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(160, 160, 160, 0.3);
+            border-radius: 10px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Фон чата (паттерн) */
+        .chat-bg-light {
+            background-color: #E6EBEF;
+            background-image: url('https://web.telegram.org/a/chat-bg-pattern-light.png');
+            background-size: 400px;
+            background-blend-mode: overlay;
+        }
+        .chat-bg-dark {
+            background-color: #0F0F0F;
+            background-image: url('https://web.telegram.org/a/chat-bg-pattern-dark.png');
+            background-size: 400px;
+            background-blend-mode: overlay;
+        }
+
+        /* Анимации */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
+        
+        .message-bubble { position: relative; max-width: 85%; word-wrap: break-word; }
+        .message-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 10px;
+            height: 10px;
+        }
+        .message-in:after {
+            left: -8px;
+            background: inherit;
+            clip-path: polygon(100% 0, 100% 100%, 0 100%);
+            border-bottom-right-radius: 5px;
+        }
+        .message-out:after {
+            right: -8px;
+            background: inherit;
+            clip-path: polygon(0 0, 0 100%, 100% 100%);
+            border-bottom-left-radius: 5px;
+        }
+
+        /* Предотвращение выделения текста на UI элементах */
+        .no-select { user-select: none; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-tg-darker text-gray-900 dark:text-gray-100 transition-colors duration-200 h-[100dvh] w-screen m-0 overflow-hidden">
+    <div id="app" class="h-full w-full" @drop.prevent="handleDrop" @dragover.prevent="dragOver = true" @dragleave.prevent="dragOver = false" @paste="handlePaste">
+        
+        <!-- Экран авторизации (Ввод токена) -->
+        <div v-if="!isAuthenticated" class="h-full flex items-center justify-center bg-gray-50 dark:bg-tg-darker">
+            <div class="bg-white dark:bg-tg-dark p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
+                <div class="w-24 h-24 bg-tg-blue rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <i class="fa-brands fa-telegram text-white text-6xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold mb-2">Telegram Bot Client</h1>
+                <p class="text-gray-500 dark:text-gray-400 mb-6 text-sm">Введите токен вашего бота, полученный от @BotFather</p>
+                
+                <input v-model="tokenInput" type="text" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" 
+                    class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-[#181818] focus:outline-none focus:ring-2 focus:ring-tg-blue transition mb-4 text-center">
+                
+                <p v-if="authError" class="text-red-500 text-sm mb-4">{{ authError }}</p>
+                
+                <button @click="login" :disabled="isLoading" 
+                    class="w-full bg-tg-blue text-white py-3 rounded-xl font-semibold hover:bg-blue-600 transition disabled:opacity-50">
+                    <span v-if="isLoading"><i class="fa-solid fa-circle-notch fa-spin"></i> Подключение...</span>
+                    <span v-else>Войти</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Основной интерфейс -->
+        <div v-else class="h-full w-full flex overflow-hidden bg-white dark:bg-tg-dark">
+            
+            <!-- Левая панель (Список чатов) -->
+            <div :class="['w-full md:w-[350px] lg:w-[420px] flex-col border-r border-gray-200 dark:border-gray-800 transition-all duration-300 flex-shrink-0 h-full', isMobile && activeChatId ? 'hidden' : 'flex']">
+                <!-- Шапка списка чатов -->
+                <div class="px-4 py-3 flex items-center gap-4">
+                    <button class="text-gray-500 hover:text-tg-blue transition">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                    <div class="flex-1 relative">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" placeholder="Поиск" class="w-full bg-gray-100 dark:bg-[#181818] rounded-full py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-tg-blue text-sm">
+                    </div>
+                    <button @click="toggleTheme" class="text-gray-500 hover:text-tg-blue transition w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-800">
+                        <i :class="isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon'"></i>
+                    </button>
+                </div>
+
+                <!-- Список чатов -->
+                <div class="flex-1 overflow-y-auto">
+                    <div v-if="sortedChats.length === 0" class="flex flex-col items-center justify-center h-full text-gray-400 text-center p-4">
+                        <i class="fa-regular fa-comments text-4xl mb-3"></i>
+                        <p>Нет активных диалогов.<br>Напишите боту в Telegram, чтобы начать.</p>
+                    </div>
+                    
+                    <div v-for="chat in sortedChats" :key="chat.id" @click="selectChat(chat.id)"
+                        :class="['flex items-center px-3 py-2 cursor-pointer transition mx-2 rounded-xl my-1', activeChatId === chat.id ? 'bg-tg-blue text-white' : 'hover:bg-tg-hover dark:hover:bg-tg-darkhover']">
+                        
+                        <!-- Аватарка -->
+                        <div class="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-lg mr-3 shadow-sm"
+                             :class="activeChatId === chat.id ? 'bg-white/20' : getAvatarColor(chat.id)">
+                            {{ chat.first_name ? chat.first_name.charAt(0) : '?' }}
+                        </div>
+                        
+                        <!-- Информация -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-1">
+                                <h3 class="font-semibold truncate text-[15px]" :class="activeChatId === chat.id ? 'text-white' : ''">
+                                    {{ chat.first_name }} {{ chat.last_name || '' }}
+                                </h3>
+                                <span class="text-xs whitespace-nowrap ml-2" :class="activeChatId === chat.id ? 'text-blue-100' : 'text-gray-500'">
+                                    {{ formatTime(chat.lastMessage?.date) }}
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <p class="text-[14px] truncate" :class="activeChatId === chat.id ? 'text-blue-100' : 'text-gray-500'">
+                                    <span v-if="chat.lastMessage?.out" class="mr-1"><i class="fa-solid fa-check text-xs"></i></span>
+                                    <span v-if="chat.lastMessage?.photo"><i class="fa-solid fa-image mr-1"></i> Фото</span>
+                                    <span v-else-if="chat.lastMessage?.document"><i class="fa-solid fa-file mr-1"></i> Файл</span>
+                                    <span v-else-if="chat.lastMessage?.sticker"><i class="fa-solid fa-sticky-note mr-1"></i> Стикер</span>
+                                    <span v-else v-html="formatTextPreview(chat.lastMessage?.text || 'Нет сообщений')"></span>
+                                </p>
+                                <span v-if="chat.unreadCount > 0" class="bg-gray-400 dark:bg-gray-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full ml-2">
+                                    {{ chat.unreadCount }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-3 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 cursor-pointer hover:text-red-500 transition" @click="logout">
+                    <i class="fa-solid fa-sign-out-alt mr-1"></i> Выйти из @{{ me?.username }}
+                </div>
+            </div>
+
+            <!-- Правая панель (Окно чата) -->
+            <div :class="['flex-1 flex-col relative h-full max-w-full', isDark ? 'chat-bg-dark' : 'chat-bg-light', (!activeChatId && isMobile) ? 'hidden' : 'flex']">
+                
+                <!-- Оверлей при перетаскивании -->
+                <div v-if="dragOver" class="absolute inset-0 bg-tg-blue/90 z-50 flex flex-col items-center justify-center text-white backdrop-blur-sm transition-all">
+                    <div class="w-32 h-32 border-4 border-dashed border-white rounded-full flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-file-arrow-up text-5xl"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold">Отпустите файлы</h2>
+                    <p class="mt-2 opacity-80">чтобы отправить их в чат</p>
+                </div>
+
+                <!-- Заглушка, если чат не выбран -->
+                <div v-if="!activeChatId" class="absolute inset-0 flex items-center justify-center bg-gray-100/50 dark:bg-[#0f0f0f]/80 z-10 backdrop-blur-sm">
+                    <div class="bg-white/80 dark:bg-black/40 px-4 py-1.5 rounded-full text-sm font-medium">
+                        Выберите чат для общения
+                    </div>
+                </div>
+
+                <template v-if="activeChatId">
+                    <!-- Шапка чата -->
+                    <div class="bg-white/90 dark:bg-tg-dark/90 backdrop-blur-md px-4 py-2 flex items-center shadow-sm z-20 border-b border-gray-200/50 dark:border-gray-800/50">
+                        <button v-if="isMobile" @click="activeChatId = null" class="mr-4 text-gray-500 hover:text-tg-blue text-xl">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold mr-3 shadow-sm"
+                             :class="getAvatarColor(activeChatId)">
+                            {{ activeChat?.first_name ? activeChat.first_name.charAt(0) : '?' }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h2 class="font-semibold text-[16px] truncate leading-tight">{{ activeChat?.first_name }} {{ activeChat?.last_name || '' }}</h2>
+                            <p class="text-gray-500 text-[13px] truncate">@{{ activeChat?.username || 'user' }} • id: {{ activeChatId }}</p>
+                        </div>
+                        <button class="text-gray-500 hover:text-tg-blue px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                    </div>
+
+                    <!-- Область сообщений -->
+                    <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-2" id="chat-container">
+                        <div v-for="msg in currentMessages" :key="msg.message_id" class="flex flex-col w-full">
+                            
+                            <!-- Разделитель даты (упрощенно, здесь можно добавить логику группировки по дням) -->
+
+                            <div class="flex max-w-[85%] sm:max-w-[75%]" :class="msg.out ? 'self-end justify-end' : 'self-start'">
+                                <div class="message-bubble rounded-2xl px-3 py-2 shadow-sm text-[15px]" 
+                                     :class="msg.out ? (isDark ? 'bg-tg-darkmsg text-white message-out rounded-br-none' : 'bg-tg-lightmsg text-black message-out rounded-br-none') 
+                                                     : (isDark ? 'bg-tg-dark text-white message-in rounded-bl-none' : 'bg-white text-black message-in rounded-bl-none')">
+                                    
+                                    <!-- Пересланное сообщение -->
+                                    <div v-if="msg.forward_from || msg.forward_from_chat" class="text-[13px] mb-1 pl-2 border-l-2 border-tg-blue text-tg-blue font-medium">
+                                        Переслано от {{ msg.forward_from?.first_name || msg.forward_from_chat?.title || 'Пользователь' }}
+                                    </div>
+
+                                    <!-- Ответ на сообщение -->
+                                    <div v-if="msg.reply_to_message" class="bg-black/5 dark:bg-white/5 rounded p-1 mb-1 border-l-2 border-tg-blue flex flex-col text-[13px] cursor-pointer">
+                                        <span class="font-medium text-tg-blue">{{ msg.reply_to_message.from?.first_name || 'Бот' }}</span>
+                                        <span class="text-gray-500 truncate" v-html="getReplyPreview(msg.reply_to_message)"></span>
+                                    </div>
+
+                                    <!-- Фото -->
+                                    <div v-if="msg.photo" class="mb-1 -mx-2 -mt-2 cursor-pointer">
+                                        <img :src="getFileUrl(getBestPhoto(msg.photo).file_id)" class="rounded-t-xl rounded-b-sm max-w-full h-auto object-cover max-h-72" @load="scrollToBottom(false)" alt="Фото">
+                                    </div>
+
+                                    <!-- Стикер -->
+                                    <div v-if="msg.sticker" class="mb-1 w-40 h-40">
+                                        <img :src="getFileUrl(msg.sticker.thumb?.file_id || msg.sticker.file_id)" class="w-full h-full object-contain" @load="scrollToBottom(false)" alt="Стикер">
+                                    </div>
+
+                                    <!-- Документ / Файл -->
+                                    <div v-if="msg.document" class="flex items-center gap-3 bg-black/5 dark:bg-white/5 p-2 rounded-xl mb-1 cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition">
+                                        <div class="w-10 h-10 bg-tg-blue text-white rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fa-solid fa-file-lines text-lg"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0 overflow-hidden">
+                                            <div class="font-medium text-[14px] truncate">{{ msg.document.file_name || 'Файл' }}</div>
+                                            <div class="text-gray-500 text-[12px]">{{ formatBytes(msg.document.file_size) }}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Видео/Voice (упрощенно) -->
+                                    <div v-if="msg.voice || msg.video || msg.video_note" class="flex items-center gap-2 mb-1 text-tg-blue">
+                                        <i class="fa-solid fa-play-circle text-2xl"></i>
+                                        <span class="text-sm font-medium">Медиасообщение (скачайте в Telegram)</span>
+                                    </div>
+
+                                    <!-- Текст -->
+                                    <div v-if="msg.text || msg.caption" class="whitespace-pre-wrap break-words leading-tight" v-html="formatText(msg.text || msg.caption)"></div>
+
+                                    <!-- Метаданные (Время и статус) -->
+                                    <div class="flex items-center justify-end gap-1 mt-1 float-right ml-3 select-none">
+                                        <!-- Реакции -->
+                                        <div v-if="msg.reactions && msg.reactions.length > 0" class="flex gap-1 mr-2 bg-black/10 dark:bg-white/10 rounded-full px-1.5 py-0.5 text-[11px]">
+                                            <span v-for="reaction in msg.reactions" :key="reaction.emoji">{{ reaction.emoji }}</span>
+                                        </div>
+                                        <span class="text-[11px]" :class="msg.out ? (isDark ? 'text-blue-200' : 'text-green-700/60') : 'text-gray-400'">
+                                            {{ formatTime(msg.date) }}
+                                        </span>
+                                        <i v-if="msg.out" class="fa-solid fa-check text-[10px]" :class="isDark ? 'text-blue-300' : 'text-green-600'"></i>
+                                    </div>
+                                    <div class="clear-both"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Предпросмотр прикрепленного файла -->
+                    <div v-if="attachedFile" class="bg-gray-100 dark:bg-[#1c1c1c] p-3 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <div v-if="isImage(attachedFile)" class="w-10 h-10 bg-black/10 rounded flex-shrink-0 bg-cover bg-center" :style="{'background-image': `url(${filePreviewUrl})`}"></div>
+                            <div v-else class="w-10 h-10 bg-tg-blue text-white rounded flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-file"></i>
+                            </div>
+                            <div class="flex-col min-w-0 flex-1">
+                                <div class="text-sm font-medium truncate">{{ attachedFile.name }}</div>
+                                <div class="text-xs text-gray-500">{{ formatBytes(attachedFile.size) }}</div>
+                            </div>
+                        </div>
+                        <button @click="clearAttachment" class="text-gray-500 hover:text-red-500 px-3">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+
+                    <!-- Область ввода -->
+                    <div class="bg-white dark:bg-tg-dark p-2 sm:p-4 flex items-end gap-2 sm:gap-3 z-20">
+                        <button class="p-2 sm:p-3 text-gray-400 hover:text-tg-blue transition rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 relative cursor-pointer overflow-hidden">
+                            <i class="fa-solid fa-paperclip text-xl"></i>
+                            <input type="file" @change="handleFileSelect" class="absolute inset-0 opacity-0 cursor-pointer" title="Прикрепить файл">
+                        </button>
+                        
+                        <div class="flex-1 bg-gray-100 dark:bg-[#181818] rounded-2xl sm:rounded-3xl flex items-center px-2 sm:px-4 py-1 sm:py-2 focus-within:ring-2 ring-tg-blue/50 transition">
+                            <button class="p-1 sm:p-2 text-gray-400 hover:text-tg-blue transition">
+                                <i class="fa-regular fa-face-smile text-xl"></i>
+                            </button>
+                            <textarea v-model="inputText" @keydown.enter.prevent="sendMessage" @input="resizeTextarea" ref="msgInput"
+                                class="flex-1 bg-transparent border-none focus:outline-none resize-none max-h-32 text-sm sm:text-base px-2 py-1.5 sm:py-2 custom-scrollbar" 
+                                rows="1" placeholder="Написать сообщение..."></textarea>
+                        </div>
+
+                        <button v-if="inputText.trim() || attachedFile" @click="sendMessage" 
+                            class="w-10 h-10 sm:w-12 sm:h-12 bg-tg-blue text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition shadow-md flex-shrink-0">
+                            <i v-if="isSending" class="fa-solid fa-circle-notch fa-spin"></i>
+                            <i v-else class="fa-solid fa-paper-plane sm:text-lg -ml-1"></i>
+                        </button>
+                        <button v-else class="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 hover:text-tg-blue transition rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-microphone sm:text-xl"></i>
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, watch, nextTick, onMounted, onUnmounted } = Vue;
+
+        createApp({
+            setup() {
+                // Состояние
+                const tokenInput = ref(localStorage.getItem('tg_bot_token') || '');
+                const token = ref('');
+                const me = ref(null);
+                const isAuthenticated = ref(false);
+                const isLoading = ref(false);
+                const authError = ref('');
+                
+                const chats = ref({});
+                const activeChatId = ref(null);
+                const messages = ref({}); // { chatId: [msg1, msg2] }
+                const fileCache = ref({}); // { file_id: url }
+                
+                const inputText = ref('');
+                const msgInput = ref(null);
+                const isDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches);
+                const isMobile = ref(window.innerWidth < 768);
+                const dragOver = ref(false);
+                
+                const attachedFile = ref(null);
+                const filePreviewUrl = ref(null);
+                const isSending = ref(false);
+                
+                let lastUpdateId = 0;
+                let pollTimeout = null;
+
+                // Базовый URL API
+                const apiUrl = computed(() => `https://api.telegram.org/bot${token.value}`);
+                
+                // Вычисляемые свойства
+                const sortedChats = computed(() => {
+                    return Object.values(chats.value).sort((a, b) => {
+                        const timeA = a.lastMessage?.date || 0;
+                        const timeB = b.lastMessage?.date || 0;
+                        return timeB - timeA;
+                    });
+                });
+
+                const activeChat = computed(() => {
+                    return activeChatId.value ? chats.value[activeChatId.value] : null;
+                });
+
+                const currentMessages = computed(() => {
+                    return activeChatId.value && messages.value[activeChatId.value] 
+                        ? messages.value[activeChatId.value] 
+                        : [];
+                });
+
+                // Методы авторизации
+                const login = async () => {
+                    if (!tokenInput.value.trim()) {
+                        authError.value = 'Введите токен';
+                        return;
+                    }
+                    isLoading.value = true;
+                    authError.value = '';
+                    try {
+                        const res = await fetch(`https://api.telegram.org/bot${tokenInput.value.trim()}/getMe`);
+                        const data = await res.json();
+                        
+                        if (data.ok) {
+                            me.value = data.result;
+                            token.value = tokenInput.value.trim();
+                            localStorage.setItem('tg_bot_token', token.value);
+                            isAuthenticated.value = true;
+                            startPolling();
+                        } else {
+                            authError.value = 'Неверный токен. Проверьте правильность ввода.';
+                        }
+                    } catch (e) {
+                        authError.value = 'Ошибка сети. Проверьте подключение к интернету.';
+                    } finally {
+                        isLoading.value = false;
+                    }
+                };
+
+                const logout = () => {
+                    isAuthenticated.value = false;
+                    stopPolling();
+                    token.value = '';
+                    me.value = null;
+                    chats.value = {};
+                    messages.value = {};
+                    activeChatId.value = null;
+                    localStorage.removeItem('tg_bot_token');
+                    tokenInput.value = '';
+                };
+
+                // Логика Telegram API
+                const startPolling = async () => {
+                    try {
+                        const res = await fetch(`${apiUrl.value}/getUpdates?offset=${lastUpdateId + 1}&timeout=30&allowed_updates=["message","edited_message","message_reaction"]`);
+                        
+                        if (res.status === 401 || res.status === 404) {
+                            logout();
+                            return;
+                        }
+
+                        const data = await res.json();
+                        if (data.ok && data.result.length > 0) {
+                            for (const update of data.result) {
+                                lastUpdateId = update.update_id;
+                                processUpdate(update);
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Polling error:", e);
+                    } finally {
+                        if (isAuthenticated.value) {
+                            pollTimeout = setTimeout(startPolling, 1000);
+                        }
+                    }
+                };
+
+                const stopPolling = () => {
+                    if (pollTimeout) clearTimeout(pollTimeout);
+                };
+
+                const processUpdate = (update) => {
+                    let msg = update.message || update.edited_message;
+                    
+                    // Обработка реакций (API 7.0+)
+                    if (update.message_reaction) {
+                        const reaction = update.message_reaction;
+                        const chatId = reaction.chat.id;
+                        if (messages.value[chatId]) {
+                            const targetMsg = messages.value[chatId].find(m => m.message_id === reaction.message_id);
+                            if (targetMsg) {
+                                // Сохраняем только эмодзи из массива реакций
+                                targetMsg.reactions = reaction.new_reaction.map(r => ({ emoji: r.emoji }));
+                            }
+                        }
+                        return;
+                    }
+
+                    if (!msg) return;
+
+                    const chat = msg.chat;
+                    const chatId = chat.id;
+
+                    // Создаем чат, если его нет
+                    if (!chats.value[chatId]) {
+                        chats.value[chatId] = {
+                            id: chatId,
+                            first_name: chat.first_name || chat.title || 'Unknown',
+                            last_name: chat.last_name || '',
+                            username: chat.username || '',
+                            type: chat.type,
+                            unreadCount: 0,
+                            lastMessage: null
+                        };
+                    }
+
+                    // Инициализируем массив сообщений
+                    if (!messages.value[chatId]) {
+                        messages.value[chatId] = [];
+                    }
+
+                    msg.out = false; // Входящее (от юзера боту)
+
+                    // Избегаем дубликатов
+                    if (!messages.value[chatId].some(m => m.message_id === msg.message_id)) {
+                        messages.value[chatId].push(msg);
+                        
+                        if (activeChatId.value !== chatId) {
+                            chats.value[chatId].unreadCount++;
+                        } else {
+                            scrollToBottom(true);
+                        }
+                    } else if (update.edited_message) {
+                         // Замена отредактированного
+                         const idx = messages.value[chatId].findIndex(m => m.message_id === msg.message_id);
+                         if (idx !== -1) messages.value[chatId][idx] = msg;
+                    }
+
+                    chats.value[chatId].lastMessage = msg;
+                    
+                    // Предзагрузка URL файлов, чтобы интерфейс не тормозил при рендере
+                    preloadFileUrl(msg);
+                };
+
+                const preloadFileUrl = async (msg) => {
+                    let fileId = null;
+                    if (msg.photo) fileId = getBestPhoto(msg.photo).file_id;
+                    if (msg.sticker) fileId = msg.sticker.thumb?.file_id || msg.sticker.file_id;
+                    // Ограничиваем загрузку документов (могут быть огромными), качаем только превью если есть
+                    
+                    if (fileId && !fileCache.value[fileId]) {
+                        try {
+                            const res = await fetch(`${apiUrl.value}/getFile?file_id=${fileId}`);
+                            const data = await res.json();
+                            if (data.ok) {
+                                fileCache.value[fileId] = `https://api.telegram.org/file/bot${token.value}/${data.result.file_path}`;
+                            }
+                        } catch (e) { console.error('Failed to resolve file path', e); }
+                    }
+                };
+
+                const getFileUrl = (fileId) => {
+                    if (!fileId) return '';
+                    // Если URL еще не загружен, возвращаем пустую строку (картинка покажется позже)
+                    if (!fileCache.value[fileId]) {
+                         // Запускаем загрузку асинхронно, если еще не запущена
+                         return ''; 
+                    }
+                    return fileCache.value[fileId];
+                };
+
+                const getBestPhoto = (photos) => {
+                    return photos.reduce((prev, current) => (prev.file_size > current.file_size) ? prev : current);
+                };
+
+                const selectChat = (chatId) => {
+                    activeChatId.value = chatId;
+                    if (chats.value[chatId]) {
+                        chats.value[chatId].unreadCount = 0;
+                    }
+                    scrollToBottom(true);
+                    if (isMobile.value) {
+                        nextTick(() => { focusInput(); });
+                    }
+                };
+
+                const sendMessage = async () => {
+                    if (!activeChatId.value) return;
+                    const text = inputText.value.trim();
+                    const file = attachedFile.value;
+                    
+                    if (!text && !file) return;
+
+                    isSending.value = true;
+                    const chatId = activeChatId.value;
+                    
+                    // Создаем временное сообщение для UI
+                    const tempMsgId = Date.now();
+                    const tempMsg = {
+                        message_id: tempMsgId,
+                        date: Math.floor(Date.now() / 1000),
+                        text: text,
+                        out: true,
+                        chat: chats.value[chatId]
+                    };
+
+                    if (file) {
+                        if (isImage(file)) {
+                            tempMsg.photo = [{ file_id: filePreviewUrl.value }]; // Временный URL
+                            fileCache.value[filePreviewUrl.value] = filePreviewUrl.value;
+                        } else {
+                            tempMsg.document = { file_name: file.name, file_size: file.size };
+                        }
+                    }
+
+                    messages.value[chatId].push(tempMsg);
+                    chats.value[chatId].lastMessage = tempMsg;
+                    inputText.value = '';
+                    clearAttachment();
+                    resetTextarea();
+                    scrollToBottom(true);
+
+                    try {
+                        let formData = new FormData();
+                        formData.append('chat_id', chatId);
+                        let endpoint = '/sendMessage';
+
+                        if (file) {
+                            if (isImage(file)) {
+                                endpoint = '/sendPhoto';
+                                formData.append('photo', file);
+                                if (text) formData.append('caption', text);
+                            } else {
+                                endpoint = '/sendDocument';
+                                formData.append('document', file);
+                                if (text) formData.append('caption', text);
+                            }
+                        } else {
+                            formData.append('text', text);
+                        }
+
+                        const res = await fetch(`${apiUrl.value}${endpoint}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await res.json();
+                        
+                        if (data.ok) {
+                            // Заменяем временное сообщение на реальное
+                            data.result.out = true;
+                            const idx = messages.value[chatId].findIndex(m => m.message_id === tempMsgId);
+                            if (idx !== -1) {
+                                messages.value[chatId][idx] = data.result;
+                            }
+                            chats.value[chatId].lastMessage = data.result;
+                        }
+                    } catch (e) {
+                        console.error('Send error:', e);
+                        alert('Ошибка отправки сообщения');
+                    } finally {
+                        isSending.value = false;
+                        scrollToBottom(true);
+                    }
+                };
+
+                // Работа с файлами (Drag & Drop, Paste, Input)
+                const handleDrop = (e) => {
+                    dragOver.value = false;
+                    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        attachFile(e.dataTransfer.files[0]);
+                    }
+                };
+
+                const handlePaste = (e) => {
+                    if (e.clipboardData.files && e.clipboardData.files.length > 0) {
+                        attachFile(e.clipboardData.files[0]);
+                    }
+                };
+
+                const handleFileSelect = (e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                        attachFile(e.target.files[0]);
+                    }
+                };
+
+                const attachFile = (file) => {
+                    if (file.size > 50 * 1024 * 1024) { // 50MB limit для ботов
+                        alert("Файл слишком большой. Максимальный размер 50МБ.");
+                        return;
+                    }
+                    attachedFile.value = file;
+                    if (isImage(file)) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => { filePreviewUrl.value = e.target.result; };
+                        reader.readAsDataURL(file);
+                    } else {
+                        filePreviewUrl.value = null;
+                    }
+                    focusInput();
+                };
+
+                const clearAttachment = () => {
+                    attachedFile.value = null;
+                    filePreviewUrl.value = null;
+                };
+
+                const isImage = (file) => file.type.startsWith('image/');
+
+                // UI Helpers
+                const updateTheme = () => {
+                    if (isDark.value) {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                };
+
+                const toggleTheme = () => {
+                    isDark.value = !isDark.value;
+                    updateTheme();
+                };
+
+                const scrollToBottom = (force = false) => {
+                    nextTick(() => {
+                        const container = document.getElementById('chat-container');
+                        if (container) {
+                            // Автоскролл если мы внизу или если force (например при отправке)
+                            const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+                            if (force || isAtBottom) {
+                                container.scrollTop = container.scrollHeight;
+                            }
+                        }
+                    });
+                };
+
+                const resizeTextarea = (e) => {
+                    const el = e.target;
+                    el.style.height = 'auto';
+                    el.style.height = (el.scrollHeight) + 'px';
+                };
+
+                const resetTextarea = () => {
+                    if (msgInput.value) {
+                        msgInput.value.style.height = 'auto';
+                    }
+                };
+
+                const focusInput = () => {
+                    if (msgInput.value) msgInput.value.focus();
+                };
+
+                const checkMobile = () => {
+                    isMobile.value = window.innerWidth < 768;
+                };
+
+                // Форматирование
+                const formatTime = (unix_timestamp) => {
+                    if (!unix_timestamp) return '';
+                    const date = new Date(unix_timestamp * 1000);
+                    return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                };
+
+                const formatBytes = (bytes) => {
+                    if (!bytes) return '0 B';
+                    const k = 1024;
+                    const sizes = ['B', 'KB', 'MB', 'GB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+                };
+
+                const formatText = (text) => {
+                    if (!text) return '';
+                    // Простая защита от XSS и конвертация ссылок
+                    let escaped = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    // Выделение ссылок
+                    escaped = escaped.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" class="text-tg-blue hover:underline">$1</a>');
+                    return escaped;
+                };
+                
+                const formatTextPreview = (text) => {
+                    if (!text) return '';
+                    return text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                };
+
+                const getReplyPreview = (msg) => {
+                    if (msg.text) return formatTextPreview(msg.text);
+                    if (msg.photo) return '<i class="fa-solid fa-image"></i> Фото';
+                    if (msg.sticker) return '<i class="fa-solid fa-sticky-note"></i> Стикер';
+                    if (msg.document) return '<i class="fa-solid fa-file"></i> Файл';
+                    return 'Сообщение';
+                };
+
+                const getAvatarColor = (chatId) => {
+                    const colors = [
+                        'bg-red-500', 'bg-green-500', 'bg-blue-500', 'bg-yellow-500', 
+                        'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'
+                    ];
+                    // Генерируем цвет на основе ID
+                    return colors[Math.abs(chatId) % colors.length];
+                };
+
+                // Жизненный цикл
+                onMounted(() => {
+                    window.addEventListener('resize', checkMobile);
+                    updateTheme();
+                    // Автоматический вход если есть токен
+                    if (tokenInput.value) {
+                        login();
+                    }
+                });
+
+                onUnmounted(() => {
+                    window.removeEventListener('resize', checkMobile);
+                    stopPolling();
+                });
+
+                // Следим за новыми сообщениями для автоскролла
+                watch(currentMessages, () => {
+                    scrollToBottom(false);
+                }, { deep: true });
+
+                return {
+                    tokenInput, token, me, isAuthenticated, isLoading, authError,
+                    chats, sortedChats, activeChatId, activeChat, currentMessages,
+                    inputText, msgInput, isDark, isMobile, dragOver,
+                    attachedFile, filePreviewUrl, isSending,
+                    login, logout, selectChat, sendMessage,
+                    handleDrop, handlePaste, handleFileSelect, clearAttachment,
+                    toggleTheme, resizeTextarea, formatTime, formatBytes, formatText, 
+                    formatTextPreview, getReplyPreview, getFileUrl, getBestPhoto, isImage, getAvatarColor, scrollToBottom
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+
+
+```
