@@ -10,7 +10,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow-x:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);}
-.screen{display:none;min-height:100dvh;padding-bottom:72px;flex-direction:column;}
+.screen{display:none;min-height:100vh;padding-bottom:72px;flex-direction:column;}
 .screen.active{display:flex;animation:fadeUp .2s ease;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
@@ -154,7 +154,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);}
 <body>
 
 <!-- HOME -->
-<div id="home" class="screen">
+<div id="home" class="screen active">
   <div class="page-header">
     <div class="eyebrow">// ЗАЧЁТ · АНГЛИЙСКИЙ</div>
     <h1>Выучи <span>4 текста</span></h1>
@@ -403,6 +403,7 @@ function showScreen(id,navEl){
 function goHome(){showScreen('home',document.querySelectorAll('.nav-item')[0]);}
 
 buildHome();
+document.getElementById("home").classList.add("active");
 </script>
 </body>
 </html>
