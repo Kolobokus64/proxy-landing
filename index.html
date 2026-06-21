@@ -3,319 +3,375 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0b0f">
 <title>Зачёт EN</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0e0f14;--surface:#16181f;--card:#1e2029;--border:#2a2d3a;
-  --accent:#5b8aff;--green:#48d9a4;--red:#ff6b6b;--yellow:#f7a941;--purple:#b48aff;
-  --text:#e8eaf0;--muted:#7a7f96;
-  --mono:'Space Mono',monospace;--sans:'Manrope',sans-serif;
+:root {
+  --bg: #0a0b0f;
+  --s1: #111318;
+  --s2: #181b23;
+  --s3: #1e2230;
+  --border: #ffffff0f;
+  --border2: #ffffff18;
+  --text: #f0f2f8;
+  --text2: #8b91a8;
+  --text3: #4a5068;
+  --blue: #4f8fff;
+  --blue-glow: rgba(79,143,255,0.18);
+  --purple: #9b6fff;
+  --purple-glow: rgba(155,111,255,0.18);
+  --amber: #f5a623;
+  --amber-glow: rgba(245,166,35,0.16);
+  --green: #3ecf8e;
+  --green-glow: rgba(62,207,142,0.16);
+  --red: #ff5f5f;
+  --red-glow: rgba(255,95,95,0.16);
+  --sans: 'Inter', sans-serif;
 }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow-x:hidden;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; background:var(--bg); }
+body { font-family:var(--sans); color:var(--text); }
 
-.screen{display:none;min-height:100vh;flex-direction:column;padding-bottom:72px;}
-.screen.active{display:flex;animation:fadeUp .2s ease;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+/* ── SCREENS ── */
+.screen { position:fixed; inset:0; display:flex; flex-direction:column; opacity:0; pointer-events:none; transition:opacity .25s ease; }
+.screen.active { opacity:1; pointer-events:all; }
 
-/* NAV */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(14,15,20,.97);
-  backdrop-filter:blur(16px);border-top:1px solid var(--border);
-  display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);}
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;
-  padding:10px 4px 12px;cursor:pointer;gap:3px;border:none;
-  background:transparent;color:var(--muted);font-family:var(--sans);}
-.ni.active{color:var(--accent);}
-.ni-ic{font-size:20px;}
-.ni-lb{font-size:10px;font-weight:700;}
+/* ── HOME ── */
+#home { background:var(--bg); overflow-y:auto; padding-bottom:88px; }
+.home-bg {
+  position:absolute; top:0; left:0; right:0; height:260px;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,143,255,0.12) 0%, transparent 70%);
+  pointer-events:none;
+}
+.home-head { padding:56px 24px 32px; position:relative; }
+.home-head .greeting { font-size:13px; font-weight:600; color:var(--blue); letter-spacing:.5px; margin-bottom:8px; }
+.home-head h1 { font-size:30px; font-weight:900; line-height:1.15; letter-spacing:-.5px; }
+.home-head h1 .dim { color:var(--text2); font-weight:700; }
+.home-head .sub { font-size:13px; color:var(--text2); margin-top:10px; line-height:1.6; }
 
-/* PAGE HEADER */
-.phdr{padding:52px 20px 18px;
-  background:linear-gradient(160deg,#1a1d2e 0%,var(--bg) 100%);
-  border-bottom:1px solid var(--border);flex-shrink:0;}
-.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:3px;
-  color:var(--accent);text-transform:uppercase;margin-bottom:6px;}
-.phdr h1{font-size:26px;font-weight:800;line-height:1.2;}
-.phdr h1 span{color:var(--accent);}
-.phdr .sub{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5;}
+.topics-grid { padding:0 16px; display:flex; flex-direction:column; gap:12px; position:relative; }
 
-/* STICKY HEADER */
-.shdr{position:sticky;top:0;z-index:10;background:rgba(14,15,20,.96);
-  backdrop-filter:blur(12px);border-bottom:1px solid var(--border);
-  padding:12px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
-.back{width:36px;height:36px;border-radius:10px;background:var(--card);
-  border:1px solid var(--border);color:var(--text);font-size:16px;
-  display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
-.back:active{background:var(--border);}
-.shdr-info{flex:1;min-width:0;}
-.shdr-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.shdr-hint{font-size:11px;color:var(--muted);margin-top:1px;}
+.t-card {
+  border-radius:20px; padding:22px 20px; cursor:pointer; position:relative; overflow:hidden;
+  border:1px solid var(--border2); background:var(--s1);
+  transition:transform .15s, background .15s;
+  display:flex; align-items:center; gap:16px;
+}
+.t-card:active { transform:scale(.97); }
+.t-card .t-glow {
+  position:absolute; inset:0; opacity:.5;
+  transition:opacity .3s;
+}
+.t-card:nth-child(1) .t-glow { background:radial-gradient(ellipse at 0% 50%, rgba(79,143,255,0.15) 0%, transparent 60%); }
+.t-card:nth-child(2) .t-glow { background:radial-gradient(ellipse at 0% 50%, rgba(255,95,95,0.12) 0%, transparent 60%); }
+.t-card:nth-child(3) .t-glow { background:radial-gradient(ellipse at 0% 50%, rgba(62,207,142,0.12) 0%, transparent 60%); }
+.t-card:nth-child(4) .t-glow { background:radial-gradient(ellipse at 0% 50%, rgba(245,166,35,0.12) 0%, transparent 60%); }
 
-/* MODE TABS */
-.mtabs{display:flex;gap:8px;padding:12px 16px 10px;overflow-x:auto;
-  scrollbar-width:none;flex-shrink:0;border-bottom:1px solid var(--border);}
-.mtabs::-webkit-scrollbar{display:none;}
-.mtab{flex-shrink:0;padding:7px 14px;border-radius:100px;font-size:12px;
-  font-weight:700;font-family:var(--sans);cursor:pointer;
-  border:1.5px solid var(--border);background:var(--card);color:var(--muted);transition:all .2s;}
-.mtab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.t-emoji { font-size:32px; flex-shrink:0; position:relative; z-index:1; }
+.t-info { flex:1; min-width:0; position:relative; z-index:1; }
+.t-title { font-size:16px; font-weight:800; letter-spacing:-.2px; margin-bottom:5px; }
+.t-card:nth-child(1) .t-title { color:#7aabff; }
+.t-card:nth-child(2) .t-title { color:#ff8080; }
+.t-card:nth-child(3) .t-title { color:#5fdba8; }
+.t-card:nth-child(4) .t-title { color:#f5c060; }
+.t-meta { font-size:12px; color:var(--text2); }
+.t-prog-bar { height:3px; background:rgba(255,255,255,.07); border-radius:100px; margin-top:8px; overflow:hidden; width:100%; }
+.t-prog-fill { height:100%; border-radius:100px; transition:width .5s ease; }
+.t-card:nth-child(1) .t-prog-fill { background:var(--blue); }
+.t-card:nth-child(2) .t-prog-fill { background:var(--red); }
+.t-card:nth-child(3) .t-prog-fill { background:var(--green); }
+.t-card:nth-child(4) .t-prog-fill { background:var(--amber); }
+.t-arrow { font-size:18px; color:var(--text3); flex-shrink:0; position:relative; z-index:1; }
 
-/* HOME */
-.tlist{padding:20px 16px;display:flex;flex-direction:column;gap:12px;}
-.tcard{background:var(--card);border:1px solid var(--border);border-radius:16px;
-  padding:18px 44px 18px 18px;cursor:pointer;position:relative;overflow:hidden;
-  transition:transform .15s,background .15s;}
-.tcard:active{transform:scale(.97);background:#22252f;}
-.tcard::after{content:'›';position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--border);}
-.tcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0;}
-.tc-num{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:5px;}
-.tc-title{font-size:17px;font-weight:800;margin-bottom:3px;}
-.tc-meta{font-size:12px;color:var(--muted);}
-.tcard:nth-child(1)::before,.tcard:nth-child(1) .tc-title{background:var(--accent);color:var(--accent);}
-.tcard:nth-child(2)::before,.tcard:nth-child(2) .tc-title{background:var(--red);color:var(--red);}
-.tcard:nth-child(3)::before,.tcard:nth-child(3) .tc-title{background:var(--green);color:var(--green);}
-.tcard:nth-child(4)::before,.tcard:nth-child(4) .tc-title{background:var(--yellow);color:var(--yellow);}
+/* ── TRAINER ── */
+#trainer {
+  background:var(--bg); flex-direction:column;
+}
+.trainer-head {
+  padding:52px 20px 14px;
+  display:flex; align-items:center; gap:12px; flex-shrink:0;
+}
+.tr-back {
+  width:38px; height:38px; border-radius:12px;
+  background:var(--s1); border:1px solid var(--border2);
+  color:var(--text2); font-size:18px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; flex-shrink:0;
+}
+.tr-back:active { background:var(--s2); }
+.tr-topic { flex:1; min-width:0; }
+.tr-topic-name { font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tr-topic-sub { font-size:11px; color:var(--text2); margin-top:1px; }
+.tr-read-btn {
+  padding:6px 12px; border-radius:8px; background:var(--s1);
+  border:1px solid var(--border2); font-size:11px; font-weight:700;
+  color:var(--text2); cursor:pointer; flex-shrink:0;
+}
 
-/* READ MODE */
-.slist{flex:1;overflow-y:auto;}
-.srow{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px;cursor:pointer;}
-.srow:active{background:var(--card);}
-.s-n{font-family:var(--mono);font-size:11px;color:var(--muted);padding-top:2px;flex-shrink:0;min-width:18px;}
-.s-b{flex:1;}
-.s-en{font-size:15px;font-weight:600;line-height:1.6;}
-.s-en strong{color:var(--accent);font-weight:800;}
-.s-ru{font-size:13px;color:var(--muted);line-height:1.5;margin-top:5px;display:none;}
-.s-ru.show{display:block;}
-.s-ru strong{color:#8899cc;font-weight:700;}
-.s-tog{flex-shrink:0;width:28px;height:28px;border-radius:8px;background:var(--surface);
-  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
-  font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;transition:all .15s;}
-.s-tog.open{background:var(--accent);border-color:var(--accent);color:#fff;}
+/* Progress strip */
+.tr-prog-strip {
+  padding:0 20px 14px; flex-shrink:0;
+}
+.tr-prog-nums { display:flex; justify-content:space-between; margin-bottom:6px; }
+.tr-prog-nums span { font-size:11px; color:var(--text2); font-weight:600; }
+.tr-prog-nums .pn-val { color:var(--text); font-weight:700; }
+.big-bar { height:6px; background:rgba(255,255,255,.06); border-radius:100px; overflow:hidden; }
+.big-fill { height:100%; background:linear-gradient(90deg, var(--blue), var(--purple)); border-radius:100px; transition:width .5s ease; }
 
-/* ══ TRAINER MODE ══ */
-.trainer-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+/* Stage indicators */
+.stages-track { display:flex; gap:5px; padding:0 20px 16px; flex-shrink:0; }
+.stage-pip { flex:1; height:4px; border-radius:100px; background:rgba(255,255,255,.07); transition:background .4s, transform .2s; }
+.stage-pip.s-done { background:var(--green); }
+.stage-pip.s-cur-0 { background:var(--purple); transform:scaleY(1.5); }
+.stage-pip.s-cur-1 { background:var(--amber); transform:scaleY(1.5); }
+.stage-pip.s-cur-2 { background:var(--blue); transform:scaleY(1.5); }
+.stage-pip.s-cur-3 { background:var(--text); transform:scaleY(1.5); }
 
-/* Прогресс вверху */
-.tr-progress{padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.tr-prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.tr-prog-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;}
-.tr-prog-val{font-family:var(--mono);font-size:10px;color:var(--accent);}
-.prog-bar{height:4px;background:var(--border);border-radius:100px;overflow:hidden;}
-.prog-fill{height:100%;border-radius:100px;transition:width .4s ease;}
+/* Main card */
+.tr-card-wrap {
+  flex:1; padding:0 16px; display:flex; flex-direction:column; gap:10px;
+  overflow:hidden; min-height:0;
+}
 
-/* Стадии */
-.stages-row{display:flex;gap:4px;padding:0 16px 12px;flex-shrink:0;}
-.stage-dot{flex:1;height:3px;border-radius:100px;background:var(--border);transition:background .3s;}
-.stage-dot.done{background:var(--green);}
-.stage-dot.current{background:var(--accent);}
+/* Previous sentence ghost */
+.prev-ghost {
+  padding:12px 16px; border-radius:14px;
+  background:rgba(255,255,255,.03); border:1px solid var(--border);
+  flex-shrink:0;
+}
+.prev-ghost .pg-label { font-size:9px; font-weight:700; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase; margin-bottom:5px; }
+.prev-ghost .pg-text { font-size:13px; color:var(--text3); line-height:1.5; }
+.prev-ghost .pg-text strong { color:rgba(79,143,255,.45); font-weight:700; }
 
-/* Карточка тренировки */
-.tr-card-area{flex:1;overflow-y:auto;padding:16px;}
+/* The main learning card */
+.tr-card {
+  flex:1; border-radius:24px; border:1px solid var(--border2);
+  padding:28px 22px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center;
+  position:relative; overflow:hidden; min-height:0;
+  transition:border-color .4s;
+}
+.tr-card .card-glow {
+  position:absolute; inset:0; pointer-events:none;
+  transition:opacity .4s;
+}
+/* Stage colors */
+.tr-card.st-read  { border-color:rgba(155,111,255,.3); background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(155,111,255,.07) 0%, transparent 70%), var(--s1); }
+.tr-card.st-ru    { border-color:rgba(245,166,35,.3);  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,166,35,.07) 0%, transparent 70%), var(--s1); }
+.tr-card.st-anc   { border-color:rgba(79,143,255,.3);  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79,143,255,.08) 0%, transparent 70%), var(--s1); }
+.tr-card.st-blank { border-color:rgba(255,255,255,.12); background:var(--s1); }
 
-.tr-card{background:var(--card);border:1.5px solid var(--border);border-radius:20px;
-  padding:28px 20px;display:flex;flex-direction:column;align-items:center;
-  text-align:center;margin-bottom:14px;transition:border-color .3s;}
-.tr-card.stage-read{border-color:var(--purple);}
-.tr-card.stage-ru{border-color:var(--yellow);}
-.tr-card.stage-anc{border-color:var(--accent);}
-.tr-card.stage-blank{border-color:var(--border);}
-.tr-card.stage-correct{border-color:var(--green);background:rgba(72,217,164,.06);}
+.stage-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 13px; border-radius:100px; font-size:10px; font-weight:800;
+  letter-spacing:.8px; text-transform:uppercase; margin-bottom:20px; flex-shrink:0;
+}
+.sb-read  { background:var(--purple-glow); color:var(--purple); border:1px solid rgba(155,111,255,.25); }
+.sb-ru    { background:var(--amber-glow);  color:var(--amber);  border:1px solid rgba(245,166,35,.25); }
+.sb-anc   { background:var(--blue-glow);   color:var(--blue);   border:1px solid rgba(79,143,255,.25); }
+.sb-blank { background:rgba(255,255,255,.05); color:var(--text2); border:1px solid var(--border2); }
 
-.tr-stage-badge{display:inline-flex;align-items:center;gap:6px;
-  padding:4px 12px;border-radius:100px;font-size:10px;font-weight:700;
-  font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;
-  margin-bottom:16px;}
-.badge-read{background:rgba(180,138,255,.15);color:var(--purple);border:1px solid rgba(180,138,255,.3);}
-.badge-ru{background:rgba(247,169,65,.15);color:var(--yellow);border:1px solid rgba(247,169,65,.3);}
-.badge-anc{background:rgba(91,138,255,.15);color:var(--accent);border:1px solid rgba(91,138,255,.3);}
-.badge-blank{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border);}
+.card-content { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; min-height:0; }
 
-.tr-sent-num{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:12px;}
+.full-en { font-size:17px; font-weight:700; line-height:1.7; color:var(--text); }
+.full-en strong { color:#7aabff; font-weight:800; }
+.full-ru { font-size:14px; font-weight:500; line-height:1.6; color:var(--text2); margin-top:14px; }
+.full-ru strong { color:rgba(155,111,255,.8); font-weight:700; }
 
-.tr-full-en{font-size:16px;font-weight:700;line-height:1.7;color:var(--text);margin-bottom:4px;}
-.tr-full-en strong{color:var(--accent);font-weight:800;}
-.tr-full-ru{font-size:14px;font-weight:600;line-height:1.6;color:var(--muted);margin-top:12px;}
-.tr-full-ru strong{color:#8899cc;font-weight:700;}
+.ru-only { font-size:16px; font-weight:600; line-height:1.7; color:var(--text); }
+.ru-only strong { color:rgba(245,166,35,.85); font-weight:700; }
 
-.tr-ru-only{font-size:15px;font-weight:600;line-height:1.7;color:var(--text);}
-.tr-ru-only strong{color:#8899cc;font-weight:700;}
+.anchors-wrap { display:flex; flex-wrap:wrap; gap:9px; justify-content:center; }
+.anc-pill {
+  padding:8px 16px; border-radius:100px;
+  background:var(--blue-glow); border:1px solid rgba(79,143,255,.3);
+  font-size:15px; font-weight:700; color:var(--blue);
+}
 
-.tr-anchors{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
-.anc{padding:6px 14px;border-radius:100px;background:rgba(91,138,255,.12);
-  border:1px solid rgba(91,138,255,.3);font-size:14px;font-weight:700;color:var(--accent);}
+.blank-num { font-size:72px; font-weight:900; color:rgba(255,255,255,.06); letter-spacing:-3px; line-height:1; }
+.blank-sub { font-size:13px; color:var(--text3); margin-top:12px; font-weight:500; }
 
-.tr-blank-num{font-size:56px;font-weight:800;color:var(--border);line-height:1;}
-.tr-blank-hint{font-size:12px;color:var(--muted);margin-top:12px;font-family:var(--mono);}
+/* Reveal answer */
+.reveal-box {
+  width:100%; margin-top:16px; padding-top:16px;
+  border-top:1px solid var(--border2); display:none; text-align:center;
+}
+.reveal-box.show { display:block; }
+.reveal-en { font-size:16px; font-weight:700; line-height:1.7; color:var(--text); }
+.reveal-en strong { color:#7aabff; font-weight:800; }
+.reveal-ru { font-size:13px; color:var(--text2); line-height:1.5; margin-top:8px; }
+.reveal-ru strong { color:rgba(155,111,255,.7); font-weight:700; }
 
-/* Раскрытый ответ */
-.tr-reveal{width:100%;margin-top:16px;padding-top:16px;
-  border-top:1px solid var(--border);display:none;}
-.tr-reveal.show{display:block;}
-.tr-reveal-en{font-size:15px;font-weight:700;line-height:1.7;color:var(--text);text-align:center;}
-.tr-reveal-en strong{color:var(--accent);}
+.card-tap-hint { font-size:11px; color:var(--text3); margin-top:16px; font-weight:500; flex-shrink:0; }
 
-/* Кнопки */
-.tr-tap-hint{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:14px;letter-spacing:.5px;}
+/* Action buttons */
+.tr-actions { padding:12px 16px 20px; display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
+.action-btn {
+  width:100%; padding:17px 20px; border-radius:16px; font-size:15px; font-weight:700;
+  font-family:var(--sans); cursor:pointer; border:none; transition:opacity .15s, transform .1s;
+  letter-spacing:-.1px;
+}
+.action-btn:active { opacity:.8; transform:scale(.98); }
+.btn-primary { background:linear-gradient(135deg, var(--blue), #6a5aff); color:#fff; }
+.btn-check   { background:var(--s2); border:1px solid var(--border2); color:var(--text); }
+.btn-wrong   { background:var(--red-glow); border:1px solid rgba(255,95,95,.3); color:var(--red); }
+.btn-right   { background:var(--green-glow); border:1px solid rgba(62,207,142,.3); color:var(--green); }
 
-.tr-btns{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
-.tr-btn{width:100%;padding:15px;border-radius:14px;font-size:14px;
-  font-weight:700;font-family:var(--sans);cursor:pointer;
-  border:1.5px solid;transition:opacity .15s;text-align:center;}
-.tr-btn:active{opacity:.75;}
-.btn-reveal{background:rgba(91,138,255,.1);border-color:var(--accent);color:var(--accent);}
-.btn-next{background:var(--accent);border-color:var(--accent);color:#fff;}
-.btn-wrong{background:rgba(255,107,107,.1);border-color:var(--red);color:var(--red);}
-.btn-right{background:rgba(72,217,164,.1);border-color:var(--green);color:var(--green);}
+/* Safe area bottom */
+.pb-safe { padding-bottom:max(16px, env(safe-area-inset-bottom)); }
 
-/* Накопленные предложения (история) */
-.tr-history{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
-.tr-hist-item{padding:10px 14px;border-radius:12px;background:var(--surface);
-  border:1px solid var(--border);}
-.tr-hist-item .hn{font-family:var(--mono);font-size:9px;color:var(--muted);
-  letter-spacing:1px;margin-bottom:4px;}
-.tr-hist-item .he{font-size:13px;font-weight:600;line-height:1.5;color:var(--muted);}
-.tr-hist-item .he strong{color:rgba(91,138,255,.7);}
+/* ── TELL SCREEN ── */
+#tell-screen { background:var(--bg); flex-direction:column; }
+.tell-head { padding:52px 20px 16px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid var(--border); }
+.tell-topic-label { flex:1; }
+.tell-topic-label .tl { font-size:11px; color:var(--text2); margin-bottom:3px; font-weight:600; }
+.tell-topic-label .tv { font-size:15px; font-weight:800; }
+.tell-body { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; padding-bottom:80px; }
 
-/* Stage intro */
-.stage-intro{background:var(--surface);border:1px solid var(--border);
-  border-radius:14px;padding:16px;margin-bottom:14px;}
-.stage-intro .si-title{font-size:13px;font-weight:700;margin-bottom:6px;}
-.stage-intro .si-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+.tell-hero { padding:20px; border-radius:18px; background:var(--s1); border:1px solid var(--border2); text-align:center; }
+.tell-hero .th-em { font-size:36px; margin-bottom:10px; }
+.tell-hero .th-title { font-size:19px; font-weight:800; margin-bottom:8px; }
+.tell-hero .th-sub { font-size:13px; color:var(--text2); line-height:1.6; }
 
-/* Finish */
-.finish{flex:1;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:32px 20px;text-align:center;gap:16px;}
-.fe{font-size:56px;}
-.ft{font-size:22px;font-weight:800;color:var(--green);}
-.fs{font-size:14px;color:var(--muted);line-height:1.6;}
-.fb{padding:14px 32px;border-radius:14px;border:none;background:var(--accent);
-  color:#fff;font-size:15px;font-weight:700;font-family:var(--sans);cursor:pointer;width:100%;}
-.fb2{padding:14px 32px;border-radius:14px;border:1.5px solid var(--border);
-  background:transparent;color:var(--muted);font-size:15px;font-weight:700;
-  font-family:var(--sans);cursor:pointer;width:100%;}
+.tell-hint-btn {
+  padding:16px; border-radius:14px; width:100%; font-family:var(--sans);
+  background:var(--blue-glow); border:1.5px solid rgba(79,143,255,.35);
+  color:var(--blue); font-size:14px; font-weight:700; cursor:pointer; text-align:center;
+}
+.tell-hint-btn:active { opacity:.75; }
 
-/* TELL MODE */
-.tell-wrap{flex:1;padding:16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
-.tell-topic{padding:18px;border-radius:16px;background:var(--card);
-  border:1.5px solid var(--accent);text-align:center;}
-.tell-topic .tl{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px;}
-.tell-topic .tv{font-size:22px;font-weight:800;color:var(--accent);}
-.tell-info{padding:14px 16px;background:var(--surface);border:1px solid var(--border);
-  border-radius:12px;font-size:13px;color:var(--muted);line-height:1.6;}
-.tell-info b{color:var(--text);}
-.hint-btn{padding:14px;border-radius:14px;background:rgba(91,138,255,.1);
-  border:1.5px solid var(--accent);color:var(--accent);font-size:14px;
-  font-weight:700;font-family:var(--sans);cursor:pointer;text-align:center;}
-.hint-btn:active{background:rgba(91,138,255,.2);}
-.tell-sent{padding:14px 16px;border-radius:12px;background:var(--card);
-  border:1px solid var(--border);animation:fadeUp .2s ease;}
-.tell-sent .ts-n{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:1px;}
-.tell-sent .ts-ancs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
-.anc-sm{padding:4px 10px;border-radius:100px;background:rgba(91,138,255,.1);
-  border:1px solid rgba(91,138,255,.25);font-size:12px;font-weight:700;color:var(--accent);}
-.ts-tog{font-size:11px;color:var(--muted);font-family:var(--mono);cursor:pointer;display:inline-block;}
-.ts-full{font-size:14px;font-weight:600;line-height:1.6;color:var(--text);display:none;margin-top:8px;}
-.ts-full.show{display:block;}
-.ts-full strong{color:var(--accent);}
-.tell-done{padding:16px;border-radius:14px;background:rgba(72,217,164,.08);
-  border:1.5px solid var(--green);text-align:center;font-size:15px;font-weight:700;color:var(--green);}
-.tell-reset{padding:14px;border-radius:14px;background:var(--surface);
-  border:1px solid var(--border);color:var(--muted);font-size:14px;
-  font-weight:700;font-family:var(--sans);cursor:pointer;text-align:center;}
+.tell-sent { padding:14px 16px; border-radius:14px; background:var(--s1); border:1px solid var(--border2); animation:slideIn .2s ease; }
+@keyframes slideIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.ts-n { font-size:10px; font-weight:700; letter-spacing:1px; color:var(--text3); text-transform:uppercase; margin-bottom:8px; }
+.ts-ancs { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px; }
+.anc-sm { padding:4px 10px; border-radius:100px; background:var(--blue-glow); border:1px solid rgba(79,143,255,.25); font-size:12px; font-weight:700; color:var(--blue); }
+.ts-reveal { font-size:11px; color:var(--text3); cursor:pointer; font-weight:600; }
+.ts-full { font-size:14px; font-weight:600; line-height:1.6; color:var(--text); display:none; margin-top:8px; }
+.ts-full.show { display:block; }
+.ts-full strong { color:#7aabff; }
+.tell-done-banner { padding:14px; border-radius:14px; background:var(--green-glow); border:1.5px solid rgba(62,207,142,.3); text-align:center; font-size:15px; font-weight:700; color:var(--green); }
+.tell-reset { padding:14px; border-radius:14px; width:100%; font-family:var(--sans); background:var(--s1); border:1px solid var(--border2); color:var(--text2); font-size:14px; font-weight:700; cursor:pointer; text-align:center; }
 
-/* RANDOM */
-.rnd-wrap{flex:1;padding:24px 16px;display:flex;flex-direction:column;gap:20px;overflow-y:auto;}
-.dice-area{display:flex;flex-direction:column;align-items:center;gap:14px;}
-.dice-btn{width:110px;height:110px;border-radius:28px;
-  background:linear-gradient(135deg,var(--accent),#3a5fd6);border:none;
-  font-size:48px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 8px 40px rgba(91,138,255,.35);transition:transform .15s;}
-.dice-btn:active{transform:scale(.88) rotate(-5deg);}
-.dice-lbl{font-size:12px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;text-align:center;}
-.rnd-res{background:var(--card);border:1.5px solid var(--accent);border-radius:18px;
-  padding:22px 18px;text-align:center;display:none;}
-.rnd-res .rl{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px;}
-.rnd-res .rt{font-size:20px;font-weight:800;color:var(--accent);margin-bottom:16px;line-height:1.2;}
-.rnd-go{width:100%;padding:14px;border-radius:12px;background:var(--accent);
-  border:none;color:#fff;font-size:15px;font-weight:700;font-family:var(--sans);cursor:pointer;}
-.rnd-go:active{opacity:.8;}
-.tips{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;}
-.tips .tl{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--yellow);margin-bottom:14px;}
-.tip{display:flex;gap:10px;margin-bottom:12px;}
-.tip:last-child{margin-bottom:0;}
-.tip .ti{font-size:16px;flex-shrink:0;padding-top:1px;}
-.tip .tt{font-size:12px;color:var(--muted);line-height:1.5;}
-.tip .tt b{color:var(--text);font-weight:700;}
+/* ── READ SCREEN ── */
+#read-screen { background:var(--bg); flex-direction:column; }
+.read-head { padding:52px 20px 14px; display:flex; align-items:center; gap:12px; flex-shrink:0; border-bottom:1px solid var(--border); }
+.read-body { flex:1; overflow-y:auto; }
+.s-row { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; gap:12px; cursor:pointer; }
+.s-row:active { background:var(--s1); }
+.s-num { font-size:11px; font-weight:700; color:var(--text3); padding-top:3px; flex-shrink:0; min-width:20px; }
+.s-body { flex:1; }
+.s-en { font-size:15px; font-weight:600; line-height:1.65; }
+.s-en strong { color:#7aabff; font-weight:800; }
+.s-ru { font-size:13px; color:var(--text2); line-height:1.55; margin-top:6px; display:none; }
+.s-ru.show { display:block; }
+.s-ru strong { color:rgba(155,111,255,.75); font-weight:700; }
+.s-tog { flex-shrink:0; width:28px; height:28px; border-radius:8px; background:var(--s1); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--text2); font-weight:700; margin-top:2px; }
+.s-tog.open { background:var(--blue-glow); border-color:rgba(79,143,255,.4); color:var(--blue); }
+
+/* ── FINISH ── */
+.tr-finish { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 20px; text-align:center; gap:14px; }
+.tr-finish .fe { font-size:60px; }
+.tr-finish .ft { font-size:24px; font-weight:900; letter-spacing:-.5px; color:var(--green); }
+.tr-finish .fs { font-size:14px; color:var(--text2); line-height:1.7; }
+.tr-finish .ff1 { background:linear-gradient(135deg, var(--blue), #6a5aff); color:#fff; border:none; border-radius:16px; padding:17px; font-size:15px; font-weight:700; font-family:var(--sans); cursor:pointer; width:100%; }
+.tr-finish .ff2 { background:var(--s1); border:1px solid var(--border2); color:var(--text2); border-radius:16px; padding:15px; font-size:14px; font-weight:700; font-family:var(--sans); cursor:pointer; width:100%; }
+
+/* ── HOME BOTTOM NAV ── */
+.home-nav { position:fixed; bottom:0; left:0; right:0; background:rgba(10,11,15,.95); backdrop-filter:blur(20px); border-top:1px solid var(--border); padding:10px 20px max(16px, env(safe-area-inset-bottom)); display:flex; gap:10px; z-index:50; }
+.rnd-btn {
+  flex:1; padding:14px; border-radius:14px; background:var(--s2); border:1px solid var(--border2);
+  font-size:14px; font-weight:700; font-family:var(--sans); color:var(--text2); cursor:pointer; text-align:center;
+}
+.rnd-btn:active { background:var(--s3); }
+.rnd-btn.active { background:var(--blue-glow); border-color:rgba(79,143,255,.3); color:var(--blue); }
+
+/* Result overlay */
+.result-flash {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none; z-index:200;
+  opacity:0;
+}
+.result-flash.show-right { animation:flashRight .6s ease; }
+.result-flash.show-wrong  { animation:flashWrong .6s ease; }
+@keyframes flashRight { 0%{opacity:0} 30%{opacity:1} 100%{opacity:0} }
+@keyframes flashWrong { 0%{opacity:0} 30%{opacity:1} 100%{opacity:0} }
+.flash-inner { font-size:80px; }
+
 </style>
 </head>
 <body>
 
 <!-- HOME -->
 <div id="home" class="screen active">
-  <div class="phdr">
-    <div class="eyebrow">// ЗАЧЁТ · АНГЛИЙСКИЙ</div>
-    <h1>Выучи <span>4 текста</span></h1>
-    <div class="sub">📖 Читать → 🧠 Тренажёр → 🎤 Рассказать</div>
+  <div class="home-bg"></div>
+  <div class="home-head">
+    <div class="greeting">АНГЛИЙСКИЙ · ЗАЧЁТ</div>
+    <h1>Выбери<br><span class="dim">тему для изучения</span></h1>
+    <div class="sub">Открой тему → тренируйся → рассказывай</div>
   </div>
-  <div class="tlist" id="topics-list"></div>
-</div>
-
-<!-- TOPIC -->
-<div id="topic-screen" class="screen">
-  <div class="shdr">
-    <div class="back" onclick="goHome()">←</div>
-    <div class="shdr-info">
-      <div class="shdr-name" id="topic-name">-</div>
-      <div class="shdr-hint" id="topic-hint">-</div>
-    </div>
-  </div>
-  <div class="mtabs">
-    <button class="mtab active" onclick="switchMode('read',this)">📖 Читать</button>
-    <button class="mtab" onclick="switchMode('train',this)">🧠 Тренажёр</button>
-    <button class="mtab" onclick="switchMode('tell',this)">🎤 Рассказать</button>
-  </div>
-  <div id="mode-read" class="slist"></div>
-  <div id="mode-train" class="trainer-wrap" style="display:none"></div>
-  <div id="mode-tell" class="tell-wrap" style="display:none"></div>
-</div>
-
-<!-- RANDOM -->
-<div id="random-screen" class="screen">
-  <div class="phdr">
-    <div class="eyebrow">// СИМУЛЯТОР ЗАЧЁТА</div>
-    <h1>Рандомная <span>тема</span></h1>
-    <div class="sub">Тяни билет — рассказывай как на зачёте</div>
-  </div>
-  <div class="rnd-wrap">
-    <div class="dice-area">
-      <button class="dice-btn" onclick="rollDice()">🎲</button>
-      <div class="dice-lbl">Нажми — выпадет тема</div>
-    </div>
-    <div class="rnd-res" id="rnd-res">
-      <div class="rl">// ВЫПАЛА ТЕМА:</div>
-      <div class="rt" id="rnd-name"></div>
-      <button class="rnd-go" onclick="goToRandom()">Открыть → рассказать 🎤</button>
-    </div>
-    <div class="tips">
-      <div class="tl">// КАК УЧИТЬ БЫСТРО</div>
-      <div class="tip"><div class="ti">🧠</div><div class="tt"><b>Тренажёр</b> — главный режим. Он сначала показывает предложение целиком, потом убирает подсказки одну за одной. Это заставляет мозг работать.</div></div>
-      <div class="tip"><div class="ti">🔗</div><div class="tt"><b>Накопление</b> — тренажёр добавляет по одному предложению. Сначала №1, потом №1+2, потом №1+2+3. Порядок запомнится сам.</div></div>
-      <div class="tip"><div class="ti">🎤</div><div class="tt"><b>Говори вслух</b> — обязательно. Мозг запоминает то, что произносишь, а не то, что читаешь.</div></div>
-      <div class="tip"><div class="ti">⏱</div><div class="tt"><b>Подход</b> — пройди тренажёр до конца, сделай 5 мин перерыв, потом режим «Рассказать» без подсказок.</div></div>
-    </div>
+  <div class="topics-grid" id="topics-grid"></div>
+  <div class="home-nav">
+    <button class="rnd-btn" onclick="rollRandom()">🎲 Случайная тема</button>
+    <button class="rnd-btn" id="rnd-tell-btn" onclick="openRandomTell()" style="display:none">🎤 Рассказать её</button>
   </div>
 </div>
 
-<nav class="bnav">
-  <button class="ni active" onclick="showScreen('home',this)"><span class="ni-ic">📚</span><span class="ni-lb">Темы</span></button>
-  <button class="ni" onclick="showScreen('random-screen',this)"><span class="ni-ic">🎲</span><span class="ni-lb">Рандом</span></button>
-</nav>
+<!-- TRAINER -->
+<div id="trainer" class="screen">
+  <div class="trainer-head">
+    <div class="tr-back" onclick="goHome()">←</div>
+    <div class="tr-topic">
+      <div class="tr-topic-name" id="tr-topic-name">-</div>
+      <div class="tr-topic-sub" id="tr-topic-sub">-</div>
+    </div>
+    <button class="tr-read-btn" onclick="openRead()">📖 Текст</button>
+  </div>
+  <div class="tr-prog-strip">
+    <div class="tr-prog-nums">
+      <span>Выучено предложений</span>
+      <span class="pn-val" id="tr-prog-txt">0 / 15</span>
+    </div>
+    <div class="big-bar"><div class="big-fill" id="tr-big-fill" style="width:0%"></div></div>
+  </div>
+  <div class="stages-track" id="stages-track"></div>
+  <div class="tr-card-wrap" id="tr-card-wrap"></div>
+  <div class="tr-actions" id="tr-actions"></div>
+</div>
+
+<!-- READ -->
+<div id="read-screen" class="screen">
+  <div class="read-head">
+    <div class="tr-back" onclick="closeRead()">←</div>
+    <div class="tr-topic">
+      <div class="tr-topic-name" id="read-topic-name">Текст</div>
+      <div class="tr-topic-sub">Читай и запоминай</div>
+    </div>
+  </div>
+  <div class="read-body" id="read-body"></div>
+</div>
+
+<!-- TELL -->
+<div id="tell-screen" class="screen">
+  <div class="tell-head">
+    <div class="tr-back" onclick="closeTell()">←</div>
+    <div class="tell-topic-label">
+      <div class="tl">РАССКАЗАТЬ БЕЗ ПОДСКАЗОК</div>
+      <div class="tv" id="tell-topic-name">-</div>
+    </div>
+  </div>
+  <div class="tell-body" id="tell-body"></div>
+</div>
+
+<!-- Flash overlay -->
+<div class="result-flash" id="result-flash">
+  <div class="flash-inner" id="flash-inner"></div>
+</div>
 
 <script>
-const TOPICS=[
-{id:0,title:"Computer Networks",emoji:"🌐",sentences:[
+const TOPICS = [
+{id:0,emoji:"🌐",title:"Computer Networks",color:"#7aabff",sentences:[
 {en:"Modern <strong>networks</strong> connect devices to share information fast.",ru:"Современные <strong>сети</strong> соединяют устройства для быстрого обмена информацией."},
 {en:"A <strong>local area network (LAN)</strong> is used in a company, university, or office.",ru:"<strong>Локальная сеть (LAN)</strong> используется в компании, университете или офисе."},
 {en:"Computers connect through <strong>network interface cards (NICs)</strong>.",ru:"Компьютеры подключаются через <strong>сетевые интерфейсные карты (NIC)</strong>."},
@@ -332,7 +388,7 @@ const TOPICS=[
 {en:"Universities install <strong>wireless networks</strong> for study and work.",ru:"Университеты устанавливают <strong>беспроводные сети</strong> для учебы и работы."},
 {en:"New <strong>network technologies</strong> will make communication even faster.",ru:"Новые <strong>сетевые технологии</strong> сделают связь еще быстрее."}
 ]},
-{id:1,title:"Computerized Systems",emoji:"💻",sentences:[
+{id:1,emoji:"💻",title:"Computerized Systems",color:"#ff8080",sentences:[
 {en:"<strong>Computerized systems</strong> are used in <strong>companies</strong>, schools, banks, and hospitals.",ru:"<strong>Компьютеризированные системы</strong> используются в <strong>компаниях</strong>, школах, банках и больницах."},
 {en:"They help people <strong>store</strong>, <strong>process</strong>, and <strong>exchange information</strong>.",ru:"Они помогают людям <strong>хранить</strong>, <strong>обрабатывать</strong> и <strong>обмениваться информацией</strong>."},
 {en:"Many places use <strong>local area networks (LANs)</strong> to connect computers.",ru:"Многие места используют <strong>локальные сети (LAN)</strong> для подключения компьютеров."},
@@ -349,7 +405,7 @@ const TOPICS=[
 {en:"<strong>Cloud technologies</strong> let users store files online and open them on any device.",ru:"<strong>Облачные технологии</strong> позволяют пользователям хранить файлы в сети и открывать их на любом устройстве."},
 {en:"Computerized systems are becoming faster, smarter, and more <strong>secure</strong>.",ru:"Компьютеризированные системы становятся быстрее, умнее и более <strong>безопасными</strong>."}
 ]},
-{id:2,title:"Information Security",emoji:"🔐",sentences:[
+{id:2,emoji:"🔐",title:"Information Security",color:"#5fdba8",sentences:[
 {en:"<strong>Information security</strong> in the <strong>virtual world</strong> is a big problem for <strong>individuals</strong> and <strong>organizations</strong>.",ru:"<strong>Информационная безопасность</strong> в <strong>виртуальном мире</strong> — большая проблема для <strong>отдельных людей</strong> и <strong>организаций</strong>."},
 {en:"When <strong>users</strong> join <strong>social networking sites</strong>, they <strong>share</strong> <strong>personal information</strong>, <strong>photos</strong>, and <strong>private details</strong>.",ru:"Когда <strong>пользователи</strong> присоединяются к <strong>сайтам социальных сетей</strong>, они <strong>делятся</strong> <strong>личной информацией</strong>, <strong>фотографиями</strong> и <strong>личными данными</strong>."},
 {en:"This has <strong>risks</strong>, as <strong>cybercriminals</strong> want to <strong>access</strong> and <strong>misuse</strong> this <strong>data</strong>.",ru:"Это несет <strong>риски</strong>, так как <strong>киберпреступники</strong> хотят получить <strong>доступ</strong> и <strong>злоупотребить</strong> этими <strong>данными</strong>."},
@@ -366,7 +422,7 @@ const TOPICS=[
 {en:"Many <strong>companies</strong> <strong>track user activity</strong> to study <strong>traffic</strong>, <strong>page views</strong>, and <strong>online behavior</strong>.",ru:"Многие <strong>компании</strong> <strong>отслеживают активность пользователей</strong>, чтобы изучать <strong>трафик</strong>, <strong>просмотры страниц</strong> и <strong>поведение в сети</strong>."},
 {en:"We must <strong>balance security measures</strong> with <strong>civil liberties</strong> in the <strong>digital world</strong>.",ru:"Мы должны <strong>соблюдать баланс между мерами безопасности</strong> и <strong>гражданскими свободами</strong> в <strong>цифровом мире</strong>."}
 ]},
-{id:3,title:"Social Networks as Media",emoji:"📱",sentences:[
+{id:3,emoji:"📱",title:"Social Networks as Media",color:"#f5c060",sentences:[
 {en:"<strong>Social networking sites</strong> are now one of the most important types of modern <strong>media</strong>.",ru:"<strong>Сайты социальных сетей</strong> сейчас являются одним из самых важных видов современных <strong>медиа</strong>."},
 {en:"They let <strong>users</strong> <strong>post details</strong> and <strong>photos</strong> in their <strong>profiles</strong> and <strong>share information</strong> with others.",ru:"Они позволяют <strong>пользователям</strong> публиковать <strong>информацию</strong> и <strong>фотографии</strong> в своих <strong>профилях</strong> и <strong>делиться информацией</strong> с другими."},
 {en:"This is closely connected with <strong>Web 2.0</strong>, which is based on <strong>communication</strong>, <strong>information sharing</strong>, and <strong>collaboration</strong>.",ru:"Это тесно связано с <strong>Web 2.0</strong>, который основан на <strong>общении</strong>, <strong>обмене информацией</strong> и <strong>сотрудничестве</strong>."},
@@ -382,308 +438,298 @@ const TOPICS=[
 {en:"They count <strong>hits</strong>, <strong>page views</strong>, and <strong>unique visitors</strong> to <strong>measure activity</strong>.",ru:"Они считают <strong>посещения</strong>, <strong>просмотры страниц</strong> и <strong>уникальных посетителей</strong>, чтобы <strong>измерить активность</strong>."},
 {en:"<strong>Internet ratings agencies</strong> study <strong>traffic</strong> and <strong>stickiness</strong> to see how active <strong>users</strong> are.",ru:"<strong>Интернет-рейтинговые агентства</strong> изучают <strong>трафик</strong> и <strong>«прилипчивость»</strong>, чтобы увидеть, насколько активны <strong>пользователи</strong>."},
 {en:"Finally, because <strong>Moore's law</strong> makes <strong>computing power</strong> cheaper, <strong>social networks</strong> will grow as a main global <strong>media platform</strong>.",ru:"Наконец, поскольку <strong>закон Мура</strong> делает <strong>вычислительную мощность</strong> дешевле, <strong>социальные сети</strong> будут расти как основная глобальная <strong>медиаплатформа</strong>."}
-]}
+]}];
+
+// ── STATE ──
+let curTopic = null;
+let trIdx = 0, trStage = 0, trRevealed = false;
+let tellRev = 0, randomId = null;
+
+const STAGES = [
+  { key:'read',  label:'📖 Читай',      badge:'sb-read',  cls:'st-read',  desc:'Читай вслух 2-3 раза — просто запомни как звучит' },
+  { key:'ru',    label:'🇷🇺 Перевод',   badge:'sb-ru',    cls:'st-ru',    desc:'Скажи по-английски, глядя на русский' },
+  { key:'anc',   label:'⚓ Якоря',      badge:'sb-anc',   cls:'st-anc',   desc:'Вспомни полное предложение по ключевым словам' },
+  { key:'blank', label:'🧠 Наизусть',   badge:'sb-blank', cls:'st-blank', desc:'Скажи всё сам — без подсказок' },
 ];
 
-// ── СОСТОЯНИЕ ──
-let curTopic=null, curMode='read', randomId=null;
-// Тренажёр
-// Логика: идём по предложениям 0..N-1
-// Для каждого предложения 4 стадии: 0=читай, 1=по-русски, 2=якоря, 3=наизусть
-// После прохождения всех 4 стадий — предложение считается выученным, переходим к следующему
-// История выученных показывается сверху
-let trIdx=0;      // текущее предложение (0..14)
-let trStage=0;    // стадия (0..3)
-let trRevealed=false; // раскрыт ли ответ на текущей стадии
-let tellRev=0;
-
-// Стадии тренажёра
-const STAGES=[
-  {key:'read',  label:'📖 Читай',       badge:'badge-read',  cls:'stage-read',
-   desc:'Прочитай предложение вслух 2–3 раза. Просто запомни как звучит.'},
-  {key:'ru',    label:'🇷🇺 Перевод',    badge:'badge-ru',    cls:'stage-ru',
-   desc:'Видишь русский текст. Скажи вслух по-английски, потом проверь себя.'},
-  {key:'anc',   label:'⚓ Якоря',       badge:'badge-anc',   cls:'stage-anc',
-   desc:'Видишь только ключевые слова. Вспомни и произнеси полное предложение.'},
-  {key:'blank', label:'🧠 Наизусть',    badge:'badge-blank', cls:'stage-blank',
-   desc:'Ничего нет — только номер. Скажи предложение полностью по памяти.'},
-];
-
-function getAncs(html){
-  const m=[...html.matchAll(/<strong>(.*?)<\/strong>/g)];
-  return m.length?m.map(x=>x[1]):null;
+function getAncs(html) {
+  return [...html.matchAll(/<strong>(.*?)<\/strong>/g)].map(m => m[1]);
 }
 
 // ── HOME ──
-function buildHome(){
-  document.getElementById('topics-list').innerHTML=TOPICS.map((t,i)=>`
-    <div class="tcard" onclick="openTopic(${i})">
-      <div class="tc-num">// 0${i+1}</div>
-      <div class="tc-title">${t.emoji} ${t.title}</div>
-      <div class="tc-meta">15 предложений · 4 стадии обучения</div>
-    </div>`).join('');
+function buildHome() {
+  document.getElementById('topics-grid').innerHTML = TOPICS.map((t,i) => {
+    const prog = parseInt(localStorage.getItem('prog_'+t.id)||0);
+    const pct = Math.round(prog / (t.sentences.length * 4) * 100);
+    return `<div class="t-card" onclick="openTopic(${i})">
+      <div class="t-glow"></div>
+      <div class="t-emoji">${t.emoji}</div>
+      <div class="t-info">
+        <div class="t-title">${t.title}</div>
+        <div class="t-meta">${pct > 0 ? `Прогресс: ${pct}%` : '15 предложений · 4 стадии'}</div>
+        <div class="t-prog-bar"><div class="t-prog-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="t-arrow">›</div>
+    </div>`;
+  }).join('');
 }
 
-function openTopic(id){
-  curTopic=id; curMode='read';
-  const t=TOPICS[id];
-  document.getElementById('topic-name').textContent=t.emoji+' '+t.title;
-  document.getElementById('topic-hint').textContent='15 предложений';
-  document.querySelectorAll('.mtab').forEach((tab,i)=>tab.classList.toggle('active',i===0));
-  showPanel('read'); buildRead();
-  showScreen('topic-screen',null);
+// ── OPEN TOPIC ──
+function openTopic(id) {
+  curTopic = id;
+  const saved = parseInt(localStorage.getItem('tr_'+id+'_idx')||0);
+  const savedStage = parseInt(localStorage.getItem('tr_'+id+'_stage')||0);
+  trIdx = saved; trStage = savedStage; trRevealed = false;
+  document.getElementById('tr-topic-name').textContent = TOPICS[id].emoji + ' ' + TOPICS[id].title;
+  showScreen('trainer');
+  renderTrainer();
 }
 
-function showPanel(m){
-  ['read','train','tell'].forEach(x=>{
-    document.getElementById('mode-'+x).style.display=x===m?'':'none';
-  });
+// ── TRAINER ──
+function renderTrainer() {
+  const t = TOPICS[curTopic];
+  const total = t.sentences.length;
+  saveProgress();
+
+  if (trIdx >= total) { renderFinish(); return; }
+
+  const s = t.sentences[trIdx];
+  const st = STAGES[trStage];
+  const ancs = getAncs(s.en);
+
+  // Progress
+  const done = trIdx * 4 + trStage;
+  const max = total * 4;
+  const pct = (done / max * 100).toFixed(1);
+  document.getElementById('tr-prog-txt').textContent = `${trIdx} / ${total}`;
+  document.getElementById('tr-big-fill').style.width = pct + '%';
+  document.getElementById('tr-topic-sub').textContent = STAGES[trStage].desc;
+
+  // Stage pips
+  document.getElementById('stages-track').innerHTML = STAGES.map((_,i) => {
+    let cls = 'stage-pip';
+    if (i < trStage) cls += ' s-done';
+    else if (i === trStage) cls += ' s-cur-'+i;
+    return `<div class="${cls}"></div>`;
+  }).join('');
+
+  // Card wrap: prev ghost + main card
+  let cardHTML = '';
+
+  // Previous sentence (ghost)
+  if (trIdx > 0) {
+    const prev = t.sentences[trIdx-1];
+    cardHTML += `<div class="prev-ghost">
+      <div class="pg-label">✓ ${trIdx} — запомнил</div>
+      <div class="pg-text">${prev.en}</div>
+    </div>`;
+  }
+
+  // Main card
+  cardHTML += `<div class="tr-card ${st.cls}">
+    <div class="stage-badge ${st.badge}">${st.label}</div>
+    <div class="card-content">`;
+
+  if (trStage === 0) {
+    cardHTML += `<div class="full-en">${s.en}</div><div class="full-ru">${s.ru}</div>`;
+  } else if (trStage === 1) {
+    cardHTML += `<div class="ru-only">${s.ru}</div>`;
+    if (trRevealed) {
+      cardHTML += `<div class="reveal-box show"><div class="reveal-en">${s.en}</div></div>`;
+    } else {
+      cardHTML += `<div class="card-tap-hint">Скажи по-английски ↓ потом проверь</div>`;
+    }
+  } else if (trStage === 2) {
+    cardHTML += `<div class="anchors-wrap">${ancs.map(a=>`<span class="anc-pill">${a}</span>`).join('')}</div>`;
+    if (trRevealed) {
+      cardHTML += `<div class="reveal-box show"><div class="reveal-en">${s.en}</div><div class="reveal-ru">${s.ru}</div></div>`;
+    } else {
+      cardHTML += `<div class="card-tap-hint">Произнеси полное предложение ↓ потом проверь</div>`;
+    }
+  } else {
+    cardHTML += `<div class="blank-num">${trIdx+1}</div><div class="blank-sub">Предложение №${trIdx+1} — скажи по памяти</div>`;
+    if (trRevealed) {
+      cardHTML += `<div class="reveal-box show"><div class="reveal-en">${s.en}</div><div class="reveal-ru">${s.ru}</div></div>`;
+    } else {
+      cardHTML += `<div class="card-tap-hint">Произнеси полностью ↓ потом проверь</div>`;
+    }
+  }
+
+  cardHTML += `</div></div>`; // card-content, tr-card
+  document.getElementById('tr-card-wrap').innerHTML = cardHTML;
+
+  // Buttons
+  let btns = '';
+  if (trStage === 0) {
+    btns = `<button class="action-btn btn-primary" onclick="trNext()">Запомнил — дальше →</button>`;
+  } else if (!trRevealed) {
+    btns = `<button class="action-btn btn-check" onclick="trReveal()">👁 Проверить себя</button>`;
+  } else {
+    btns = `<button class="action-btn btn-wrong" onclick="trWrong()">❌ Не вспомнил</button>
+            <button class="action-btn btn-right" onclick="trRight()">✅ Вспомнил</button>`;
+  }
+  document.getElementById('tr-actions').innerHTML = `<div class="pb-safe">${btns}</div>`;
 }
 
-function switchMode(m,el){
-  curMode=m;
-  document.querySelectorAll('.mtab').forEach(t=>t.classList.remove('active'));
-  if(el)el.classList.add('active');
-  showPanel(m);
-  if(m==='train')buildTrain();
-  if(m==='tell')buildTell();
+function renderFinish() {
+  document.getElementById('stages-track').innerHTML = '';
+  document.getElementById('tr-prog-txt').textContent = '15 / 15';
+  document.getElementById('tr-big-fill').style.width = '100%';
+  document.getElementById('tr-topic-sub').textContent = 'Тренажёр пройден!';
+  document.getElementById('tr-card-wrap').innerHTML = `
+    <div class="tr-finish">
+      <div class="fe">🏆</div>
+      <div class="ft">Готово!</div>
+      <div class="fs">Все 15 предложений пройдены через 4 стадии.<br>Теперь проверь себя — расскажи без подсказок.</div>
+      <button class="ff1" onclick="openTell()">🎤 Рассказать без подсказок</button>
+      <button class="ff2" style="margin-top:8px" onclick="resetTrain()">🔄 Пройти заново</button>
+    </div>`;
+  document.getElementById('tr-actions').innerHTML = '';
+}
+
+function saveProgress() {
+  localStorage.setItem('tr_'+curTopic+'_idx', trIdx);
+  localStorage.setItem('tr_'+curTopic+'_stage', trStage);
+  const done = trIdx * 4 + trStage;
+  localStorage.setItem('prog_'+curTopic, done);
+}
+
+function trReveal() { trRevealed = true; renderTrainer(); }
+
+function trNext() { trStage = 1; trRevealed = false; renderTrainer(); }
+
+function trRight() {
+  flash('✅');
+  if (trStage < 3) { trStage++; }
+  else { trIdx++; trStage = 0; }
+  trRevealed = false;
+  setTimeout(renderTrainer, 300);
+}
+
+function trWrong() {
+  flash('❌');
+  trStage = 0; trRevealed = false;
+  setTimeout(renderTrainer, 300);
+}
+
+function resetTrain() {
+  trIdx = 0; trStage = 0; trRevealed = false;
+  localStorage.removeItem('tr_'+curTopic+'_idx');
+  localStorage.removeItem('tr_'+curTopic+'_stage');
+  localStorage.removeItem('prog_'+curTopic);
+  renderTrainer();
+}
+
+function flash(emoji) {
+  const el = document.getElementById('result-flash');
+  document.getElementById('flash-inner').textContent = emoji;
+  el.className = 'result-flash ' + (emoji === '✅' ? 'show-right' : 'show-wrong');
+  setTimeout(() => { el.className = 'result-flash'; }, 700);
 }
 
 // ── READ ──
-function buildRead(){
-  const t=TOPICS[curTopic];
-  document.getElementById('mode-read').innerHTML=t.sentences.map((s,i)=>`
-    <div class="srow" onclick="togRu(${i})">
-      <div class="s-n">${i+1}</div>
-      <div class="s-b">
+function openRead() {
+  const t = TOPICS[curTopic];
+  document.getElementById('read-topic-name').textContent = t.emoji + ' ' + t.title;
+  document.getElementById('read-body').innerHTML = t.sentences.map((s,i) => `
+    <div class="s-row" onclick="togRu(${i})">
+      <div class="s-num">${i+1}</div>
+      <div class="s-body">
         <div class="s-en">${s.en}</div>
         <div class="s-ru" id="ru${i}">${s.ru}</div>
       </div>
       <div class="s-tog" id="tog${i}">RU</div>
     </div>`).join('');
+  showScreen('read-screen');
 }
 
-function togRu(i){
-  const r=document.getElementById('ru'+i),t=document.getElementById('tog'+i);
-  t.classList.toggle('open',r.classList.toggle('show'));
-}
+function closeRead() { showScreen('trainer'); }
 
-// ── TRAINER ──
-function buildTrain(){
-  trIdx=0; trStage=0; trRevealed=false;
-  renderTrain();
-}
-
-function renderTrain(){
-  const t=TOPICS[curTopic];
-  const wrap=document.getElementById('mode-train');
-
-  if(trIdx>=t.sentences.length){
-    wrap.innerHTML=`
-      <div class="finish">
-        <div class="fe">🏆</div>
-        <div class="ft">Тренажёр пройден!</div>
-        <div class="fs">Ты прошёл все 4 стадии для всех 15 предложений.<br><br>Теперь иди в <b>🎤 Рассказать</b> — попробуй без подсказок.</div>
-        <button class="fb" onclick="switchMode('tell', document.querySelectorAll('.mtab')[2])">🎤 Попробовать рассказать</button>
-        <button class="fb2" style="margin-top:8px" onclick="buildTrain()">🔄 Пройти заново</button>
-      </div>`;
-    return;
-  }
-
-  const s=t.sentences[trIdx];
-  const stage=STAGES[trStage];
-  const ancs=getAncs(s.en);
-  const total=t.sentences.length;
-
-  // Прогресс: общий (выученные предложения)
-  const overallPct=(trIdx/total*100).toFixed(0);
-  // Стадии точки
-  const stageDots=STAGES.map((_,i)=>{
-    let cls='stage-dot';
-    if(i<trStage)cls+=' done';
-    else if(i===trStage)cls+=' current';
-    return `<div class="${cls}"></div>`;
-  }).join('');
-
-  let html=`
-    <div class="tr-progress">
-      <div class="tr-prog-row">
-        <span class="tr-prog-label">ПРЕДЛОЖЕНИЙ ВЫУЧЕНО</span>
-        <span class="tr-prog-val">${trIdx} / ${total}</span>
-      </div>
-      <div class="prog-bar"><div class="prog-fill" style="width:${overallPct}%;background:var(--green)"></div></div>
-    </div>
-    <div class="stages-row">${stageDots}</div>
-    <div class="tr-card-area">
-  `;
-
-  // История (уже выученные предложения) — последние 2
-  if(trIdx>0){
-    html+=`<div class="tr-history">`;
-    const start=Math.max(0,trIdx-2);
-    for(let i=start;i<trIdx;i++){
-      html+=`<div class="tr-hist-item">
-        <div class="hn">// ${i+1} — уже знаешь ✓</div>
-        <div class="he">${t.sentences[i].en}</div>
-      </div>`;
-    }
-    html+=`</div>`;
-  }
-
-  // Карточка
-  html+=`<div class="tr-card ${stage.cls}" id="tr-card">`;
-  html+=`<div class="tr-stage-badge ${stage.badge}">${stage.label}</div>`;
-  html+=`<div class="tr-sent-num">// ПРЕДЛОЖЕНИЕ ${trIdx+1}</div>`;
-
-  if(trStage===0){
-    // Стадия 0: показываем всё
-    html+=`<div class="tr-full-en">${s.en}</div>`;
-    html+=`<div class="tr-full-ru">${s.ru}</div>`;
-    html+=`<div class="tr-tap-hint" style="margin-top:16px">Прочитай вслух 2-3 раза</div>`;
-  } else if(trStage===1){
-    // Стадия 1: только русский
-    html+=`<div class="tr-ru-only">${s.ru}</div>`;
-    if(!trRevealed){
-      html+=`<div class="tr-tap-hint">Скажи по-английски, потом нажми «Проверить»</div>`;
-    }
-    html+=`<div class="tr-reveal" id="tr-reveal"${trRevealed?' style="display:block"':''}>
-      <div class="tr-reveal-en">${s.en}</div>
-    </div>`;
-  } else if(trStage===2){
-    // Стадия 2: только якоря
-    if(ancs){
-      html+=`<div class="tr-anchors">${ancs.map(a=>`<span class="anc">${a}</span>`).join('')}</div>`;
-    }
-    if(!trRevealed){
-      html+=`<div class="tr-tap-hint">Вспомни полное предложение вслух, потом проверь</div>`;
-    }
-    html+=`<div class="tr-reveal" id="tr-reveal"${trRevealed?' style="display:block"':''}>
-      <div class="tr-reveal-en">${s.en}</div>
-      <div style="font-size:13px;color:var(--muted);margin-top:8px;text-align:center">${s.ru}</div>
-    </div>`;
-  } else {
-    // Стадия 3: ничего
-    html+=`<div class="tr-blank-num">${trIdx+1}</div>`;
-    if(!trRevealed){
-      html+=`<div class="tr-blank-hint">Скажи предложение №${trIdx+1} полностью по памяти</div>`;
-    }
-    html+=`<div class="tr-reveal" id="tr-reveal"${trRevealed?' style="display:block"':''}>
-      <div class="tr-reveal-en">${s.en}</div>
-      <div style="font-size:13px;color:var(--muted);margin-top:8px;text-align:center">${s.ru}</div>
-    </div>`;
-  }
-
-  html+=`</div>`; // tr-card
-
-  // Кнопки
-  html+=`<div class="tr-btns">`;
-  if(trStage===0){
-    // На стадии "читай" — просто "Дальше"
-    html+=`<button class="tr-btn btn-next" onclick="trNext()">Запомнил, дальше →</button>`;
-  } else if(!trRevealed){
-    html+=`<button class="tr-btn btn-reveal" onclick="trReveal()">👁 Проверить себя</button>`;
-  } else {
-    html+=`<button class="tr-btn btn-wrong" onclick="trWrong()">❌ Не вспомнил — повторить</button>`;
-    html+=`<button class="tr-btn btn-right" onclick="trRight()">✅ Вспомнил правильно</button>`;
-  }
-  html+=`</div>`;
-  html+=`</div>`; // tr-card-area
-
-  wrap.innerHTML=html;
-  wrap.scrollTop=0;
-}
-
-function trReveal(){
-  trRevealed=true;
-  const r=document.getElementById('tr-reveal');
-  if(r)r.style.display='block';
-  renderTrain();
-}
-
-function trNext(){
-  // Стадия 0 — просто переходим к стадии 1
-  trStage=1; trRevealed=false; renderTrain();
-}
-
-function trRight(){
-  trRevealed=false;
-  if(trStage<3){
-    trStage++;
-  } else {
-    // Предложение пройдено! Переходим к следующему, сбрасываем стадию
-    trIdx++;
-    trStage=0;
-  }
-  renderTrain();
-}
-
-function trWrong(){
-  // Откатываемся на стадию 0 для этого же предложения
-  trStage=0; trRevealed=false; renderTrain();
+function togRu(i) {
+  const r = document.getElementById('ru'+i), t = document.getElementById('tog'+i);
+  t.classList.toggle('open', r.classList.toggle('show'));
 }
 
 // ── TELL ──
-function buildTell(){tellRev=0;renderTell();}
+function openTell() {
+  tellRev = 0;
+  document.getElementById('tell-topic-name').textContent = TOPICS[curTopic].emoji + ' ' + TOPICS[curTopic].title;
+  showScreen('tell-screen');
+  renderTell();
+}
 
-function renderTell(){
-  const t=TOPICS[curTopic],total=t.sentences.length,wrap=document.getElementById('mode-tell');
-  let h=`<div class="tell-topic"><div class="tl">// ТЕМА</div><div class="tv">${t.emoji} ${t.title}</div></div>`;
-  if(tellRev===0){
-    h+=`<div class="tell-info">Расскажи текст <b>целиком по-английски</b> без подсказок.<br><br>Застрял — нажми кнопку ниже. Якоря помогут вспомнить.</div>`;
-  }
-  for(let i=0;i<tellRev;i++){
-    const s=t.sentences[i],ancs=getAncs(s.en);
-    h+=`<div class="tell-sent">
-      <div class="ts-n">// ПРЕДЛОЖЕНИЕ ${i+1}</div>
-      <div class="ts-ancs">${(ancs||[]).map(a=>`<span class="anc-sm">${a}</span>`).join('')}</div>
-      <span class="ts-tog" onclick="togFull(${i})">👁 показать текст</span>
+function closeTell() { showScreen('trainer'); }
+
+function renderTell() {
+  const t = TOPICS[curTopic], total = t.sentences.length;
+  let h = `<div class="tell-hero">
+    <div class="th-em">${t.emoji}</div>
+    <div class="th-title">${t.title}</div>
+    <div class="th-sub">Расскажи весь текст по-английски.<br>Застрял — нажми кнопку, появятся якоря.</div>
+  </div>`;
+
+  for (let i = 0; i < tellRev; i++) {
+    const s = t.sentences[i], ancs = getAncs(s.en);
+    h += `<div class="tell-sent">
+      <div class="ts-n">ПРЕДЛОЖЕНИЕ ${i+1}</div>
+      <div class="ts-ancs">${ancs.map(a=>`<span class="anc-sm">${a}</span>`).join('')}</div>
+      <span class="ts-reveal" onclick="togFull(${i})">👁 показать текст</span>
       <div class="ts-full" id="tf${i}">${s.en}</div>
     </div>`;
   }
-  if(tellRev<total){
-    h+=`<button class="hint-btn" onclick="revNext()">⚓ ${tellRev===0?'Подсказка к предложению 1':`Следующее (${tellRev+1}/${total})`}</button>`;
+
+  if (tellRev < total) {
+    h += `<button class="tell-hint-btn" onclick="revNext()">⚓ ${tellRev === 0 ? 'Подсказка к предложению 1' : `Предложение ${tellRev+1} / ${total}`}</button>`;
   } else {
-    h+=`<div class="tell-done">✅ Весь текст открыт!</div>`;
+    h += `<div class="tell-done-banner">🎉 Весь текст открыт — отличная работа!</div>`;
   }
-  h+=`<button class="tell-reset" onclick="buildTell()">🔄 Начать заново</button>`;
-  wrap.innerHTML=h;
+  h += `<button class="tell-reset" onclick="buildTell()">🔄 Начать заново</button>`;
+  document.getElementById('tell-body').innerHTML = h;
 }
 
-function revNext(){
-  tellRev++;renderTell();
-  setTimeout(()=>{const w=document.getElementById('mode-tell');w.scrollTop=w.scrollHeight;},60);
+function buildTell() { tellRev = 0; renderTell(); }
+
+function revNext() {
+  tellRev++;
+  renderTell();
+  setTimeout(() => { const b = document.getElementById('tell-body'); b.scrollTop = b.scrollHeight; }, 60);
 }
 
-function togFull(i){
-  const el=document.getElementById('tf'+i);if(!el)return;
-  const on=el.classList.toggle('show');
-  el.previousElementSibling.textContent=on?'🙈 скрыть':'👁 показать текст';
+function togFull(i) {
+  const el = document.getElementById('tf'+i); if (!el) return;
+  const on = el.classList.toggle('show');
+  el.previousElementSibling.textContent = on ? '🙈 скрыть' : '👁 показать текст';
 }
 
 // ── RANDOM ──
-function rollDice(){
-  randomId=Math.floor(Math.random()*TOPICS.length);
-  const t=TOPICS[randomId];
-  document.getElementById('rnd-name').textContent=t.emoji+' '+t.title;
-  document.getElementById('rnd-res').style.display='block';
+function rollRandom() {
+  randomId = Math.floor(Math.random() * TOPICS.length);
+  const t = TOPICS[randomId];
+  const btn = document.getElementById('rnd-tell-btn');
+  btn.style.display = 'block';
+  btn.textContent = `🎤 ${t.emoji} ${t.title}`;
+  // flash the card
+  const cards = document.querySelectorAll('.t-card');
+  cards.forEach((c,i) => { c.style.opacity = i === randomId ? '1' : '0.4'; });
+  setTimeout(() => cards.forEach(c => c.style.opacity = '1'), 1500);
 }
 
-function goToRandom(){
-  if(randomId!==null){
-    openTopic(randomId);
-    document.querySelectorAll('.mtab').forEach((tab,i)=>tab.classList.toggle('active',i===2));
-    switchMode('tell',null);
-  }
+function openRandomTell() {
+  if (randomId === null) return;
+  curTopic = randomId;
+  openTell();
 }
 
-// ── NAV ──
-function showScreen(id,navEl){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+// ── SCREEN NAV ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if(navEl){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));navEl.classList.add('active');}
 }
 
-function goHome(){showScreen('home',document.querySelectorAll('.ni')[0]);}
+function goHome() {
+  showScreen('home');
+  buildHome(); // refresh progress bars
+}
 
 buildHome();
 </script>
